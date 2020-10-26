@@ -1,0 +1,47 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure(2) do |config|
+	
+  # Eine Beschreibung aller Attribute findet sich in der 
+  # offiziellen Vagrant-Dokumentation: https://www.vagrantup.com/docs/
+
+  # Provisionierung der Box:
+  # https://app.vagrantup.com/vccw-team/boxes/xenial64 
+  # (Ubuntu 16.04 LTS x64)
+  config.vm.box = "vccw-team/xenial64"
+
+  # Allokation des Festplattenspeichers (Nexpose benötigt ca. 100 GB)
+  # Plug-in notwendig: https://github.com/sprotheroe/vagrant-disksize
+  # config.disksize.size = "50GB" 
+	
+  # Festlegung des Hostnamen
+  config.vm.hostname = "LinUbuntuBox"	
+	
+  # Erstellung eines privaten Netzwerks mit statischer IP
+  # https://www.vagrantup.com/docs/networking/private_network
+  config.vm.network "private_network", ip: "10.10.10.20"   
+	
+  config.vm.provider "virtualbox" do |vb|
+    # Anzeige der GUI sobald die VM gestartet wird (vagrant up)
+    vb.gui = true
+    # Allokation von 8 GB Arbeitsspeicher
+    vb.memory = 8192
+    # Allokation von 4 CPU-Kernen
+    vb.cpus = 4
+  end
+
+  # Neueste Informationen/Signaturen der Paketquellen erhalten:
+  config.vm.provision "shell", inline: "sudo apt-get update"
+  # Installation von Xfce4 (mit 'startx' über die CLI starten)
+  # Standard-Login: 'vagrant' (Benutzer) mit 'vagrant' (Passwort)
+  config.vm.provision "shell", inline: "sudo apt-get install -y xfce4"
+  # Installation vom X-Server Wrapper
+  # Beim Start der DE wird sonst die XWrapper.config nicht gefunden
+  config.vm.provision "shell", inline: "sudo apt-get install -y xserver-xorg-legacy"
+  # Installation von Firefox 
+  # (für den Zugriff der Weboberflächen der Schwachstellenscanner)
+  config.vm.provision "shell", inline: "sudo apt-get install -y firefox"
+  # Jeder Benutzer darf die Desktop-Umgebung starten
+  config.vm.provision "shell", inline: "sudo sed -i 's/allowed_users=.*$/allowed_users=anybody/' /etc/X11/Xwrapper.config"
+end
